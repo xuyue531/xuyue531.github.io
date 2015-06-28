@@ -84,6 +84,87 @@
         <header class="article-info clearfix">
   <h1 itemprop="name">
     
+      <a href="/2015/06/22/Hexo渲染插件不兼容引起的一个问题/" title="Hexo渲染插件不兼容引起的一个问题" itemprop="url">Hexo渲染插件不兼容引起的一个问题</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="https://plus.google.com/106769711467030692492?rel=author" title="James" target="_blank" itemprop="author">James</a>
+		
+  <p class="article-time">
+    <time datetime="2015-06-22T15:16:16.000Z" itemprop="datePublished"> 发表于 6月 22 2015</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <h2 id="问题描述">问题描述</h2>
+<p>进入博客目录，执行命令：  </p>
+<blockquote>
+<p>> npm install<br>> hexo g  (报错如下)</p>
+</blockquote>
+<p><img src="/img/hexoG_err.png" width="700px">  </p>
+<h2 id="引起原因">引起原因</h2>
+<p>不兼容的markdown渲染插件版本导致。<br>首先看看我的hexo版本号：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">hexo</span>: <span class="string">2.8.3</span></div><div class="line"><span class="attribute">os</span>: <span class="string">Darwin 14.1.0 darwin x64</span></div><div class="line"><span class="attribute">http_parser</span>: <span class="string">1.0</span></div><div class="line"><span class="attribute">node</span>: <span class="string">0.10.36</span></div><div class="line"><span class="attribute">v8</span>: <span class="string">3.14.5.9</span></div><div class="line"><span class="attribute">ares</span>: <span class="string">1.9.0-DEV</span></div><div class="line"><span class="attribute">uv</span>: <span class="string">0.10.30</span></div><div class="line"><span class="attribute">zlib</span>: <span class="string">1.2.8</span></div><div class="line"><span class="attribute">modules</span>: <span class="string">11</span></div><div class="line"><span class="attribute">openssl</span>: <span class="string">1.0.1l</span></div></pre></td></tr></table></figure>
+
+<p>参考：<a href="https://www.npmjs.com/package/hexo-renderer-marked" target="_blank" rel="external">https://www.npmjs.com/package/hexo-renderer-marked</a>，hexo 2.8.3的markdown渲染插件的版本号应该是0.1.x，而我当前的版本好是0.2的，所以导致冲突。  </p>
+<h2 id="解决方法">解决方法</h2>
+<p>可以在<code>package.json</code>中修改插件的版本，比如：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">{</div><div class="line">    "<span class="attribute">hexo-renderer-marked</span>": <span class="value"><span class="string">"0.1"</span></span>,</div><div class="line">    "<span class="attribute">hexo-renderer-stylus</span>": <span class="value"><span class="string">"0.1"</span></span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>修改完保存，执行命令：  </p>
+<blockquote>
+<p>> npm install hexo-renderer-marked —save</p>
+</blockquote>
+
+        
+        
+        <p class="article-more-link">
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Hexo/">Hexo</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Hexo/">Hexo</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="http://yoursite.com/2015/06/22/Hexo渲染插件不兼容引起的一个问题/#comments" class="ds-thread-count comments-count-link" data-thread-key="2015/06/22/Hexo渲染插件不兼容引起的一个问题/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
       <a href="/2015/05/20/Java中打印Array的几种方式/" title="Java中打印Array的几种方式" itemprop="url">Java中打印Array的几种方式</a>
   </h1>
   <p class="article-author">By
@@ -412,6 +493,8 @@
 	<p class="asidetitle">分类</p>
 		<ul>
 		
+			<li><a href="/categories/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
 			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
 		
 			<li><a href="/categories/Netty/" title="Netty">Netty<sup>1</sup></a></li>
@@ -432,6 +515,8 @@
 			<li><a href="/tags/Java/" title="Java">Java<sup>2</sup></a></li>
 		
 			<li><a href="/tags/杂谈/" title="杂谈">杂谈<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
 		
 			<li><a href="/tags/通信框架/" title="通信框架">通信框架<sup>1</sup></a></li>
 		
