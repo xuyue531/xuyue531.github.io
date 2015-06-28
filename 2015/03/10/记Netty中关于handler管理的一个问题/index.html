@@ -1,0 +1,501 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>记Netty4.x 中关于 @sharable handler 的一个问题 | James Bolg</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="James">
+    
+    <meta name="description" content="问题
+用Netty写了一个服务器，发现在第二次连接的时候出现了以下错误。">
+    
+    
+    <meta name="description" content="问题
+用Netty写了一个服务器，发现在第二次连接的时候出现了以下错误。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记Netty4.x 中关于 @sharable handler 的一个问题">
+<meta property="og:url" content="http://yoursite.com/2015/03/10/记Netty中关于handler管理的一个问题/">
+<meta property="og:site_name" content="James Bolg">
+<meta property="og:description" content="问题
+用Netty写了一个服务器，发现在第二次连接的时候出现了以下错误。">
+<meta property="og:image" content="/img/handler_ChannelPipelineException.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="记Netty4.x 中关于 @sharable handler 的一个问题">
+<meta name="twitter:description" content="问题
+用Netty写了一个服务器，发现在第二次连接的时候出现了以下错误。">
+<link rel="publisher" href="106769711467030692492">
+
+
+    
+    <link rel="alternative" href="/atom.xml" title="James Bolg" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="James Bolg" title="James Bolg"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="James Bolg">James Bolg</a></h1>
+				<h2 class="blog-motto">专注于Java技术、并发编程、RPC服务框架、分布式系统</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="http://www.cnblogs.com/big-xuyue/p/">博客园</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:yoursite.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2015/03/10/记Netty中关于handler管理的一个问题/" title="记Netty4.x 中关于 @sharable handler 的一个问题" itemprop="url">记Netty4.x 中关于 @sharable handler 的一个问题</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="https://plus.google.com/106769711467030692492?rel=author" title="James" target="_blank" itemprop="author">James</a>
+		
+  <p class="article-time">
+    <time datetime="2015-03-10T06:13:24.000Z" itemprop="datePublished"> 发表于 3月 10 2015</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#问题"><span class="toc-number">1.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分析"><span class="toc-number">2.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决"><span class="toc-number">3.</span> <span class="toc-text">解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#“is_not_a_@Sharable_handler_“"><span class="toc-number">4.</span> <span class="toc-text">“is not a @Sharable handler “</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">5.</span> <span class="toc-text">参考</span></a></li></ol>
+		
+		</div>
+		
+		<h2 id="问题">问题</h2>
+<p>用Netty写了一个服务器，发现在第二次连接的时候出现了以下错误。<br><img src="/img/handler_ChannelPipelineException.png" width="920px"><br><a id="more"></a>  </p>
+<h2 id="分析">分析</h2>
+<p>错误说明我的Decoder handler不是一个sharable handler，所以不能被多次添加和删除。于是定位到该handler添加的地方——ChannelInitializer类：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RFIDChannelInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt;</span>{</div><div class="line"></div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> RFIDServerHandler SERVER_HANDLER = <span class="keyword">new</span> RFIDServerHandler();</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Decoder DECODER = <span class="keyword">new</span> Decoder();</div><div class="line">	</div><div class="line">	<span class="annotation">@Override</span></div><div class="line">	<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span>(SocketChannel ch) <span class="keyword">throws</span> Exception {</div><div class="line">		ChannelPipeline pipeline = ch.pipeline();</div><div class="line">		</div><div class="line"><span class="comment">//		pipeline.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));</span></div><div class="line"><span class="comment">//		pipeline.addLast("bytesDecoder", new ByteArrayDecoder());</span></div><div class="line"><span class="comment">//		pipeline.addLast(new LineBasedFrameDecoder(100));</span></div><div class="line">		pipeline.addLast(<span class="string">"decoder"</span>, DECODER);</div><div class="line">		pipeline.addLast(<span class="string">"serverHandler"</span>, SERVER_HANDLER);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>看到DECODER是一个<code>static final</code>成员，所以在多个connection连接的时候都使用的同一个decoder，而decoder又没有申明为@sharable，所以就出现了上面的问题。<br>一个channelHandler经常需要保存一些状态信息，最简单的就是使用成员变量。由于一个handler实例会包含一些特定connection的状态变量，故我们应该为每一个connection创建一个属于它的handler实例，来避免产生<code>竞争条件</code>。<br>Netty4增加了sharable注解，使得handler能够被添加到多个ChannelPipeline中，一个handler可以产生多个ChannelHandlerContext，使得对应的handler可以在不同的channel中使用，此时应该注意线程安全。怎么是不安全的使用？看下面代码：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Sharable</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotSharableHandler</span> <span class="keyword">extends</span> <span class="title">ChannelInboundHandlerAdapter</span> </span>{  </div><div class="line">  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;  </div><div class="line">  </div><div class="line">    <span class="annotation">@Override</span>  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead</span>(ChannelHandlerContext ctx, Object msg) <span class="keyword">throws</span> Exception {  </div><div class="line">        count++;  </div><div class="line">        System.out.println(<span class="string">"channelRead(...) called the "</span> + count + <span class="string">" time"</span>);  </div><div class="line">        ctx.fireChannelRead(msg);  </div><div class="line">    }    </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面是一个带@Sharable注解的Handler，它被多个线程使用时，里面count是不安全的，会导致count值错误。为什么要共享ChannelHandler？使用@Sharable注解共享一个ChannelHandler在一些需求中还是有很好的作用的，如使用一个ChannelHandler来统计连接数或来处理一些全局数据等等。  </p>
+<h2 id="解决">解决</h2>
+<p>那么我现在只要在我的Decoder类上加一个@sharable注释就可以了，但发现eclipse加不上去，手动import之后运行仍然有错误。<br>我的Decoder继承了<code>ByteToMessageDecoder</code>，而在其官方文档上明确的说明了：  </p>
+<blockquote>
+<p>Be aware that sub-classes of {@link ByteToMessageDecoder} <strong>MUST NOT</strong> annotated with {@link @Sharable}.</p>
+</blockquote>
+<p>So，这个ByteToMessageDecoder及其子类都不能使用@Sharable注释。所以我需要为每一个connection创建独立的decoder handler实例。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RFIDChannelInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt;</span>{</div><div class="line"></div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> RFIDServerHandler SERVER_HANDLER = <span class="keyword">new</span> RFIDServerHandler();</div><div class="line"><span class="comment">//	private static final Decoder DECODER = new Decoder();</span></div><div class="line"><span class="comment">//	private static final StringDecoder DECODER = new StringDecoder();</span></div><div class="line">	</div><div class="line">	<span class="annotation">@Override</span></div><div class="line">	<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span>(SocketChannel ch) <span class="keyword">throws</span> Exception {</div><div class="line">		ChannelPipeline pipeline = ch.pipeline();</div><div class="line">		</div><div class="line"><span class="comment">//		pipeline.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));</span></div><div class="line"><span class="comment">//		pipeline.addLast("bytesDecoder", new ByteArrayDecoder());</span></div><div class="line"><span class="comment">//		pipeline.addLast(new LineBasedFrameDecoder(100));</span></div><div class="line">		pipeline.addLast(<span class="string">"decoder"</span>, <span class="keyword">new</span> Decoder());</div><div class="line">		pipeline.addLast(<span class="string">"serverHandler"</span>, SERVER_HANDLER);</div><div class="line">		</div><div class="line">	}</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h2 id="“is_not_a_@Sharable_handler_“">“is not a @Sharable handler “</h2>
+<p>当出现这样的错误提示时，有两种解决方法，<strong>要么就是加上注解@Sharable，要么就是每次都new一个新的handler的实例。</strong>  </p>
+<p>另外，在断开连接时仍然会调用decode函数，而此时的Bytebuf是空的（EmptyByteBuf），而在out.add(e)时，如果e为null，则会抱空指针异常，所以在out.add(e)之前要判断e是否为null。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">decode</span>(ChannelHandlerContext ctx, ByteBuf <span class="keyword">in</span>,</div><div class="line">			List&lt;Object&gt; <span class="keyword">out</span>) throws Exception {</div><div class="line">		String hexString = ByteBufUtil.hexDump(<span class="keyword">in</span>);</div><div class="line">		<span class="keyword">in</span>.clear();</div><div class="line">		Message message = analyzehis(hexString);</div><div class="line">		<span class="keyword">if</span> (message != <span class="keyword">null</span>) {</div><div class="line">			<span class="keyword">out</span>.add(message);</div><div class="line">		}</div><div class="line">	}</div></pre></td></tr></table></figure>
+
+
+
+<h2 id="参考">参考</h2>
+<p>[1] <a href="http://blog.csdn.net/abc_key/article/details/37928441" target="_blank" rel="external">Netty In Action中文版 - 第六章：ChannelHandler</a><br>[1] <a href="http://my.oschina.net/xinxingegeya/blog/295577" target="_blank" rel="external">netty4_is not a @Sharable handler</a><br>[3] <a href="http://blog.csdn.net/fengjia10/article/details/40789807" target="_blank" rel="external">玩转Netty – 从Netty3升级到Netty4</a><br>[4] Netty 4.x源码</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Netty/">Netty</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Netty/">Netty</a><a href="/tags/Java/">Java</a><a href="/tags/通信框架/">通信框架</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://yoursite.com/2015/03/10/记Netty中关于handler管理的一个问题/" data-title="记Netty4.x 中关于 @sharable handler 的一个问题 | James Bolg" data-tsina="1707538220" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/05/20/Java中打印Array的几种方式/" title="Java中打印Array的几种方式">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Java中打印Array的几种方式</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2015/03/03/RPC框架学习之Hetty源码分析/"  title="RPC框架学习之Hetty源码分析">
+ <strong>下一篇：</strong><br/> 
+ <span>RPC框架学习之Hetty源码分析
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2015/03/10/记Netty中关于handler管理的一个问题/" data-title="记Netty4.x 中关于 @sharable handler 的一个问题" data-url="http://yoursite.com/2015/03/10/记Netty中关于handler管理的一个问题/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Netty/" title="Netty">Netty<sup>1</sup></a></li>
+		
+			<li><a href="/categories/RPC框架/" title="RPC框架">RPC框架<sup>1</sup></a></li>
+		
+			<li><a href="/categories/生活随笔/" title="生活随笔">生活随笔<sup>2</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>2</sup></a></li>
+		
+			<li><a href="/tags/杂谈/" title="杂谈">杂谈<sup>2</sup></a></li>
+		
+			<li><a href="/tags/通信框架/" title="通信框架">通信框架<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Netty/" title="Netty">Netty<sup>1</sup></a></li>
+		
+			<li><a href="/tags/源码分析/" title="源码分析">源码分析<sup>1</sup></a></li>
+		
+			<li><a href="/tags/RPC/" title="RPC">RPC<sup>1</sup></a></li>
+		
+			<li><a href="/tags/snippets/" title="snippets">snippets<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  <div class="weiboshow">
+  <p class="asidetitle">新浪微博</p>
+    <iframe width="100%" height="119" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=119&fansRow=2&ptype=1&speed=0&skin=9&isTitle=1&noborder=1&isWeibo=0&isFans=0&uid=1707538220&verifier=b4ed5053&dpc=1"></iframe>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://xuquan.me" target="_blank" title="Quantin&#39;s Blog">Quantin&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m James in SIAT. <br/>
+			Learn and live.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/1707538220" target="_blank" class="icon-weibo" title="微博"></a>
+		
+		
+		<a href="https://github.com/xuyue531" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		<a href="https://www.douban.com/people/82622614" target="_blank" class="icon-douban" title="豆瓣"></a>
+		
+		
+		<a href="https://www.zhihu.com/people/yue-xu-87-99" target="_blank" class="icon-zhihu" title="知乎"></a>
+		
+		
+		<a href="https://plus.google.com/106769711467030692492?rel=author" target="_blank" class="icon-google_plus" title="Google+"></a>
+		
+		
+		<a href="mailto:xuyue0531@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://zespia.tw/hexo/" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Pacman">Jacman</a> © 2015 
+		
+		<a href="http://yoursite.com/about" target="_blank" title="James">James</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#nothing"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"xuyue531"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F99f45f8c78331e25410d52050956d7' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254425603'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s23.cnzz.com/z_stat.php%3Fid%3D1254425603' type='text/javascript'%3E%3C/script%3E"));</script>
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+  </body>
+</html>
