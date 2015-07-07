@@ -4,36 +4,21 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>Hexo渲染插件不兼容引起的一个问题 | James&#39; Bolg</title>
+    <title>关于JVM类初始化器的执行顺序 | James&#39; Bolg</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="James">
     
-    <meta name="description" content="问题描述
-进入博客目录，执行命令：  
-
-&gt; npm install&gt; hexo g  (报错如下)">
     
-    
-    <meta name="description" content="问题描述
-进入博客目录，执行命令：  
-
-&amp; npm install&amp; hexo g  (报错如下)">
+    <meta name="description">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo渲染插件不兼容引起的一个问题">
-<meta property="og:url" content="http://yoursite.com/2015/06/22/Hexo渲染插件不兼容引起的一个问题/">
+<meta property="og:title" content="关于JVM类初始化器的执行顺序">
+<meta property="og:url" content="http://yoursite.com/2015/07/06/关于JVM类初始化器的执行顺序/">
 <meta property="og:site_name" content="James' Bolg">
-<meta property="og:description" content="问题描述
-进入博客目录，执行命令：  
-
-&amp; npm install&amp; hexo g  (报错如下)">
-<meta property="og:image" content="/img/hexoG_err.png">
+<meta property="og:description">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo渲染插件不兼容引起的一个问题">
-<meta name="twitter:description" content="问题描述
-进入博客目录，执行命令：  
-
-&amp; npm install&amp; hexo g  (报错如下)">
+<meta name="twitter:title" content="关于JVM类初始化器的执行顺序">
+<meta name="twitter:description">
 <link rel="publisher" href="106769711467030692492">
 
 
@@ -97,14 +82,14 @@
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2015/06/22/Hexo渲染插件不兼容引起的一个问题/" title="Hexo渲染插件不兼容引起的一个问题" itemprop="url">Hexo渲染插件不兼容引起的一个问题</a>
+      <a href="/2015/07/06/关于JVM类初始化器的执行顺序/" title="关于JVM类初始化器的执行顺序" itemprop="url">关于JVM类初始化器的执行顺序</a>
   </h1>
   <p class="article-author">By
        
 		<a href="https://plus.google.com/106769711467030692492?rel=author" title="James" target="_blank" itemprop="author">James</a>
 		
   <p class="article-time">
-    <time datetime="2015-06-22T15:16:16.000Z" itemprop="datePublished"> 发表于 6月 22 2015</time>
+    <time datetime="2015-07-06T11:48:49.000Z" itemprop="datePublished"> 发表于 7月 6 2015</time>
     
   </p>
 </header>
@@ -113,44 +98,15 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#问题描述"><span class="toc-number">1.</span> <span class="toc-text">问题描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#引起原因"><span class="toc-number">2.</span> <span class="toc-text">引起原因</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决方法"><span class="toc-number">3.</span> <span class="toc-text">解决方法</span></a></li></ol>
+			
 		
 		</div>
 		
-		<h2 id="问题描述">问题描述</h2>
-<p>进入博客目录，执行命令：  </p>
-<blockquote>
-<p>> npm install<br>> hexo g  (报错如下)</p>
-</blockquote>
-<p><img src="/img/hexoG_err.png" width="700px"><br><a id="more"></a></p>
-<h2 id="引起原因">引起原因</h2>
-<p>不兼容的markdown渲染插件版本导致。<br>首先看看我的hexo版本号：  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">hexo</span>: <span class="string">2.8.3</span></div><div class="line"><span class="attribute">os</span>: <span class="string">Darwin 14.1.0 darwin x64</span></div><div class="line"><span class="attribute">http_parser</span>: <span class="string">1.0</span></div><div class="line"><span class="attribute">node</span>: <span class="string">0.10.36</span></div><div class="line"><span class="attribute">v8</span>: <span class="string">3.14.5.9</span></div><div class="line"><span class="attribute">ares</span>: <span class="string">1.9.0-DEV</span></div><div class="line"><span class="attribute">uv</span>: <span class="string">0.10.30</span></div><div class="line"><span class="attribute">zlib</span>: <span class="string">1.2.8</span></div><div class="line"><span class="attribute">modules</span>: <span class="string">11</span></div><div class="line"><span class="attribute">openssl</span>: <span class="string">1.0.1l</span></div></pre></td></tr></table></figure>
-
-<p>参考：<a href="https://www.npmjs.com/package/hexo-renderer-marked" target="_blank" rel="external">https://www.npmjs.com/package/hexo-renderer-marked</a>，hexo 2.8.3的markdown渲染插件的版本号应该是0.1.x，而我当前的版本好是0.2的，所以导致冲突。  </p>
-<h2 id="解决方法">解决方法</h2>
-<p>可以在<code>package.json</code>中修改插件的版本，比如：  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">{</div><div class="line">    "<span class="attribute">hexo-renderer-marked</span>": <span class="value"><span class="string">"0.1"</span></span>,</div><div class="line">    "<span class="attribute">hexo-renderer-stylus</span>": <span class="value"><span class="string">"0.1"</span></span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>修改完保存，执行命令：  </p>
-<blockquote>
-<p>> npm install hexo-renderer-marked —save</p>
-</blockquote>
-  
+		  
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
 
-<div class="article-categories">
-  <span></span>
-  <a class="article-category-link" href="/categories/Hexo/">Hexo</a>
-</div>
-
-
-  <div class="article-tags">
-  
-  <span></span> <a href="/tags/Hexo/">Hexo</a>
-  </div>
 
 </div>
 
@@ -158,7 +114,7 @@
 
 	<div class="article-share" id="share">
 	
-	  <div data-url="http://yoursite.com/2015/06/22/Hexo渲染插件不兼容引起的一个问题/" data-title="Hexo渲染插件不兼容引起的一个问题 | James&#39; Bolg" data-tsina="1707538220" class="share clearfix">
+	  <div data-url="http://yoursite.com/2015/07/06/关于JVM类初始化器的执行顺序/" data-title="关于JVM类初始化器的执行顺序 | James&#39; Bolg" data-tsina="1707538220" class="share clearfix">
 	  </div>
 	
 	</div>
@@ -172,18 +128,18 @@
 <nav class="article-nav clearfix">
  
  <div class="prev" >
- <a href="/2015/07/06/关于JVM类初始化器的执行顺序/" title="关于JVM类初始化器的执行顺序">
+ <a href="/2015/07/07/两种实现线程的方法之间该如何选择/" title="两种实现线程的方法之间该如何选择">
   <strong>上一篇：</strong><br/>
   <span>
-  关于JVM类初始化器的执行顺序</span>
+  两种实现线程的方法之间该如何选择</span>
 </a>
 </div>
 
 
 <div class="next">
-<a href="/2015/05/20/Java中打印Array的几种方式/"  title="Java中打印Array的几种方式">
+<a href="/2015/06/22/Hexo渲染插件不兼容引起的一个问题/"  title="Hexo渲染插件不兼容引起的一个问题">
  <strong>下一篇：</strong><br/> 
- <span>Java中打印Array的几种方式
+ <span>Hexo渲染插件不兼容引起的一个问题
 </span>
 </a>
 </div>
@@ -192,7 +148,7 @@
 
 	
 <section id="comments" class="comment">
-	<div class="ds-thread" data-thread-key="2015/06/22/Hexo渲染插件不兼容引起的一个问题/" data-title="Hexo渲染插件不兼容引起的一个问题" data-url="http://yoursite.com/2015/06/22/Hexo渲染插件不兼容引起的一个问题/"></div>
+	<div class="ds-thread" data-thread-key="2015/07/06/关于JVM类初始化器的执行顺序/" data-title="关于JVM类初始化器的执行顺序" data-url="http://yoursite.com/2015/07/06/关于JVM类初始化器的执行顺序/"></div>
 </section>
 
 
