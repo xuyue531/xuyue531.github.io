@@ -9,22 +9,18 @@
     
     <meta name="author" content="James">
     
-    <meta name="description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  
-            由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；                在面相对象程序设计中，继承往往意味着">
+    <meta name="description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：">
     
     
-    <meta name="description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  
-            由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；                在面相对象程序设计中，继承往往意味着增加新方法、修改或者完善类行为，如果你不对Thread类作任何修改，那么应该使用实现Runnable">
+    <meta name="description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：">
 <meta property="og:type" content="article">
 <meta property="og:title" content="两种实现线程的方法之间该如何选择">
 <meta property="og:url" content="http://yoursite.com/2015/07/07/两种实现线程的方法之间该如何选择/">
 <meta property="og:site_name" content="James' Bolg">
-<meta property="og:description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  
-            由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；                在面相对象程序设计中，继承往往意味着增加新方法、修改或者完善类行为，如果你不对Thread类作任何修改，那么应该使用实现Runnable">
+<meta property="og:description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="两种实现线程的方法之间该如何选择">
-<meta name="twitter:description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  
-            由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；                在面相对象程序设计中，继承往往意味着增加新方法、修改或者完善类行为，如果你不对Thread类作任何修改，那么应该使用实现Runnable">
+<meta name="twitter:description" content="Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：">
 <link rel="publisher" href="106769711467030692492">
 
 
@@ -108,12 +104,22 @@
 		
 		</div>
 		
-		<p>Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  </p>
-<ol><br>    <li><br>        由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；<br>    </li><br>    <li><br>        在面相对象程序设计中，继承往往意味着增加新方法、修改或者完善类行为，如果你不对Thread类作任何修改，那么应该使用实现Runnable接口的方式；<br>    </li><br>    <li><br>        Runnable方式表示的任务可以被简单的被Thread、Executors或其他方式执行，所以从任务逻辑分离的角度看，Runnable方式是更好的设计；<br>    </li><br>    <li><br>        我们可以以不同的执行方式复用Runnable实现的任务，而Thread的方式我们无法重启任务，只能等待其执行完成；<br>    </li><br>    <li><br>        Executors接受Runnable作为一个任务而不是Thread，因为他自身有work Thread来执行这些任务；<br>    </li><br>    <li><br>        Thread方式下我们需要继承Thread类中所有的方法，而这仅仅是为了表示一个任务，相比Runnable来说，表示一个任务尤为简单。<br>    </li><br></ol>  
+		<p>Java中实现线程有两种方法：继承Thread和实现Runnable接口。那我们在实践中该如何选择这两种方法呢？请看如下分析：  <a id="more"></a></p>
+<ol><br>    <li>由于Java不支持多继承，这意味着一旦继承了一个类就失去了扩展其他类的机会；<br>    </li><br>    <li>在面相对象程序设计中，继承往往意味着增加新方法、修改或者完善类行为，如果你不对Thread类作任何修改，那么应该使用实现Runnable接口的方式；<br>    </li><br>    <li>Runnable方式表示的任务可以被简单的被Thread、Executors或其他方式执行，所以从任务逻辑分离的角度看，Runnable方式是更好的设计；<br>    </li><br>    <li>我们可以以不同的执行方式复用Runnable实现的任务，而Thread的方式我们无法重启任务，只能等待其执行完成；<br>    </li><br>    <li>Executors接受Runnable作为一个任务而不是Thread，因为他自身有work Thread来执行这些任务；<br>    </li><br>    <li>Thread方式下我们需要继承Thread类中所有的方法，而这仅仅是为了表示一个任务，相比Runnable来说，表示一个任务尤为简单。<br>    </li><br></ol>  
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
 
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/并发编程/">并发编程</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Java/">Java</a><a href="/tags/多线程/">多线程</a>
+  </div>
 
 </div>
 
@@ -136,9 +142,9 @@
  
 
 <div class="next">
-<a href="/2015/07/06/关于JVM类初始化器的执行顺序/"  title="关于JVM类初始化器的执行顺序">
+<a href="/2015/06/22/Hexo渲染插件不兼容引起的一个问题/"  title="Hexo渲染插件不兼容引起的一个问题">
  <strong>下一篇：</strong><br/> 
- <span>关于JVM类初始化器的执行顺序
+ <span>Hexo渲染插件不兼容引起的一个问题
 </span>
 </a>
 </div>
@@ -171,6 +177,8 @@
 		
 			<li><a href="/categories/RPC框架/" title="RPC框架">RPC框架<sup>1</sup></a></li>
 		
+			<li><a href="/categories/并发编程/" title="并发编程">并发编程<sup>1</sup></a></li>
+		
 			<li><a href="/categories/生活随笔/" title="生活随笔">生活随笔<sup>2</sup></a></li>
 		
 		</ul>
@@ -182,9 +190,11 @@
 	<p class="asidetitle">标签</p>
 		<ul class="clearfix">
 		
+			<li><a href="/tags/Java/" title="Java">Java<sup>3</sup></a></li>
+		
 			<li><a href="/tags/杂谈/" title="杂谈">杂谈<sup>2</sup></a></li>
 		
-			<li><a href="/tags/Java/" title="Java">Java<sup>2</sup></a></li>
+			<li><a href="/tags/多线程/" title="多线程">多线程<sup>1</sup></a></li>
 		
 			<li><a href="/tags/通信框架/" title="通信框架">通信框架<sup>1</sup></a></li>
 		
